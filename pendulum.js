@@ -29,8 +29,14 @@ function drawLine(myLine, context) {
 }
 
 function paintCircle(myCircle) {
-  run('move', {x: myCircle.x / 6, y: myCircle.y / 7});
+//  console.log({x: (myCircle.x + 2) * 25, y: (myCircle.y + 2) * 25});
+  cncserver.cmd.run('move',  {x: ((myCircle.x + 2) * 25), y: (myCircle.y + 1) * 25});
 }
+
+//function removeOffset(point) {
+//  centeredPoint = {x: point.x - X0, y: point.y - Y0};
+//
+//}
 
 function animate(myCircle1, myCircle2, myLine1, myLine2, canvas, context) {
   mu      =  1+m1/m2;
@@ -41,10 +47,13 @@ function animate(myCircle1, myCircle2, myLine1, myLine2, canvas, context) {
   Phi1    += dPhi1*time;
   Phi2    += dPhi2*time;
 
+  var pendEnd = {x: Math.sin(Phi1)+Math.sin(Phi2), y: Math.cos(Phi1)+Math.cos(Phi2)};
+//  console.log(pendEnd);
   myCircle1.x = X0+l1*Math.sin(Phi1);
   myCircle1.y = Y0+l1*Math.cos(Phi1);
   myCircle2.x = X0+l1*Math.sin(Phi1)+l2*Math.sin(Phi2);
   myCircle2.y = Y0+l1*Math.cos(Phi1)+l2*Math.cos(Phi2);
+//  console.log(myCircle2);
 
   myLine1.x  = myCircle1.x;
   myLine1.y  = myCircle1.y;
@@ -54,12 +63,11 @@ function animate(myCircle1, myCircle2, myLine1, myLine2, canvas, context) {
   myLine2.y  = myCircle2.y;
 
   context.clearRect(0, 0, canvas.width, canvas.height);
-
   drawLine(myLine1, context);
   drawLine(myLine2, context);
   drawCircle(myCircle1, context);
   drawCircle(myCircle2, context);
-  paintCircle(myCircle2);
+  paintCircle(pendEnd);
 }
 
 //Physics Constants
@@ -82,15 +90,14 @@ var context = canvas.getContext('2d');
 var init    = {};
 
 function run(){
-  run = cncserver.cmd.run;
-  
+
   var myLine1 = {x0: X0, y0: Y0, x: 0, y: 0};
   var myLine2 = {x0: 0, y0: 0, x: 0, y: 0};
   var myCircle1 = {x: X0+l1*Math.sin(Phi1), y: Y0+l1*Math.cos(Phi1), mass: m1};
   var myCircle2 = {x: X0+l1*Math.sin(Phi1)+l2*Math.sin(Phi2), y: Y0+l1*Math.cos(Phi1)+l2*Math.cos(Phi2), mass: m2};
-  
-  run('up');
-  run('move', {x: myCircle2.x / 6, y: myCircle2.y / 7});
+
+//  cncserver.cmd.run('up');
+//  cncserver.cmd.run('down');
 
   clearInterval(init);
   context.clearRect(0, 0, canvas.width, canvas.height);
