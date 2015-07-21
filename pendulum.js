@@ -1,17 +1,18 @@
-function animate(myCircle1, myCircle2, myLine1, myLine2) {
-  mu      =  1+m1/m2;
-  d2Phi1  =  (g*(Math.sin(Phi2)*Math.cos(Phi1-Phi2)-mu*Math.sin(Phi1))-(l2*dPhi2*dPhi2+l1*dPhi1*dPhi1*Math.cos(Phi1-Phi2))*Math.sin(Phi1-Phi2))/(l1*(mu-Math.cos(Phi1-Phi2)*Math.cos(Phi1-Phi2)));
-  d2Phi2  =  (mu*g*(Math.sin(Phi1)*Math.cos(Phi1-Phi2)-Math.sin(Phi2))+(mu*l1*dPhi1*dPhi1+l2*dPhi2*dPhi2*Math.cos(Phi1-Phi2))*Math.sin(Phi1-Phi2))/(l2*(mu-Math.cos(Phi1-Phi2)*Math.cos(Phi1-Phi2)));
-  dPhi1   += d2Phi1*time;
-  dPhi2   += d2Phi2*time;
-  Phi1    += dPhi1*time;
-  Phi2    += dPhi2*time;
+function update(pendSettings) {
+  mu      =  1+pendSettings.m1/pendSettings.m2;
+  pendSettings.d2Phi1  =  (g*(Math.sin(pendSettings.Phi2)*Math.cos(pendSettings.Phi1-pendSettings.Phi2)-mu*Math.sin(pendSettings.Phi1))-(l2*pendSettings.dPhi2*pendSettings.dPhi2+l1*pendSettings.dPhi1*pendSettings.dPhi1*Math.cos(pendSettings.Phi1-pendSettings.Phi2))*Math.sin(pendSettings.Phi1-pendSettings.Phi2))/(l1*(mu-Math.cos(pendSettings.Phi1-pendSettings.Phi2)*Math.cos(pendSettings.Phi1-pendSettings.Phi2)));
+  pendSettings.d2Phi2  =  (mu*g*(Math.sin(pendSettings.Phi1)*Math.cos(pendSettings.Phi1-pendSettings.Phi2)-Math.sin(pendSettings.Phi2))+(mu*l1*pendSettings.dPhi1*pendSettings.dPhi1+l2*pendSettings.dPhi2*pendSettings.dPhi2*Math.cos(pendSettings.Phi1-pendSettings.Phi2))*Math.sin(pendSettings.Phi1-pendSettings.Phi2))/(l2*(mu-Math.cos(pendSettings.Phi1-pendSettings.Phi2)*Math.cos(pendSettings.Phi1-pendSettings.Phi2)));
 
-  var pendEnd = {x: Math.sin(Phi1)+Math.sin(Phi2), y: Math.cos(Phi1)+Math.cos(Phi2)};
-  myCircle1.x = X0+l1*Math.sin(Phi1);
-  myCircle1.y = Y0+l1*Math.cos(Phi1);
-  myCircle2.x = X0+l1*Math.sin(Phi1)+l2*Math.sin(Phi2);
-  myCircle2.y = Y0+l1*Math.cos(Phi1)+l2*Math.cos(Phi2);
+  pendSettings.dPhi1   += pendSettings.d2Phi1*time;
+  pendSettings.dPhi2   += pendSettings.d2Phi2*time;
+  pendSettings.Phi1    += pendSettings.dPhi1*time;
+  pendSettings.Phi2    += pendSettings.dPhi2*time;
+
+  var pendEnd = {x: Math.sin(pendSettings.Phi1)+Math.sin(pendSettings.Phi2), y: Math.cos(pendSettings.Phi1)+Math.cos(pendSettings.Phi2)};
+  myCircle1.x = X0+l1*Math.sin(pendSettings.Phi1);
+  myCircle1.y = Y0+l1*Math.cos(pendSettings.Phi1);
+  myCircle2.x = X0+l1*Math.sin(pendSettings.Phi1)+l2*Math.sin(pendSettings.Phi2);
+  myCircle2.y = Y0+l1*Math.cos(pendSettings.Phi1)+l2*Math.cos(pendSettings.Phi2);
 
   myLine1.x  = myCircle1.x;
   myLine1.y  = myCircle1.y;
@@ -22,17 +23,11 @@ function animate(myCircle1, myCircle2, myLine1, myLine2) {
 
   drawScreen();
   paintCircle(pendEnd);
+
+  return pendSettings;
 }
 
 //Physics Constants
-var d2Phi1 = 0;
-var d2Phi2 = 0;
-var dPhi1  = 0;
-var dPhi2  = 0;
-var Phi1   = 0*(Math.PI)/2;
-var Phi2   = 2.3*(Math.PI)/2;
-var m1     = 10;
-var m2     = 10;
 var l1     = 150;
 var l2     = 150;
 var X0     = 350;
@@ -45,14 +40,6 @@ var running = false;
 var canvas  = document.getElementById('myCanvas');
 var context = canvas.getContext('2d');
 var interval = 0;
-
-function reset() {
-  myLine1 = {x0: X0, y0: Y0, x: 0, y: 0};
-  myLine2 = {x0: 0, y0: 0, x: 0, y: 0};
-  myCircle1 = {x: X0+l1*Math.sin(Phi1), y: Y0+l1*Math.cos(Phi1), mass: m1};
-  myCircle2 = {x: X0+l1*Math.sin(Phi1)+l2*Math.sin(Phi2), y: Y0+l1*Math.cos(Phi1)+l2*Math.cos(Phi2), mass: m2};
-  context.clearRect(0, 0, canvas.width, canvas.height);
-}
 
 function run() {
   clearInterval(interval);
@@ -67,7 +54,7 @@ defaultSimSett = {
   'd2Phi2': 0,
   'dPhi1': 0,
   'dPhi2': 0,
-  'm1Pos': {'x': X0+l1*Math.sin(this.Phi1), 'y': Y0+l1*Math.cos(this.Phi1)}
+  'm1Pos': {'x': X0+l1*Math.sin(0), 'y': Y0+l1*Math.cos(0)}
 };
 
 currSimSett = $.extend({}, defaultSimSett);
@@ -77,6 +64,7 @@ $(function () {
   $('#set_variables_form').on('change', updateSettings);
   $('#start-button').click(uiInput);
   $('#reset-button').click(resetSim);
+  updateSettings();
 });
 
 
@@ -85,9 +73,8 @@ function uiInput() {    // When the start/stop/pause simulation button is presse
     $('#start-button').val("Pause");
     $('#reset-button').prop('disabled', true);
     running = true;
-    updateSettings();
     interval = setInterval(function() {
-      animate(myCircle1, myCircle2, myLine1, myLine2);
+      currSimSett = update(currSimSett);
     }, 5);
   } else {                              // We are running so pause running
     $('#start-button').val("Start");
@@ -109,7 +96,7 @@ function updateSettings() {  // When the simulation settings are changed
   currSimSett.Phi2 = $('#Phi2').val()/180*(Math.PI);
 
   myCircle1 = {x: X0+l1*Math.sin(currSimSett.Phi1), y: Y0+l1*Math.cos(currSimSett.Phi1), mass: currSimSett.m1};
-  myCircle2 = {x: X0+l1*Math.sin(currSimSett.Phi1)+l2*Math.sin(currSimSett.Phi2), y: Y0+l1*Math.cos(Phi1)+l2*Math.cos(currSimSett.Phi2), mass: currSimSett.m2};
+  myCircle2 = {x: X0+l1*Math.sin(currSimSett.Phi1)+l2*Math.sin(currSimSett.Phi2), y: Y0+l1*Math.cos(currSimSett.Phi1)+l2*Math.cos(currSimSett.Phi2), mass: currSimSett.m2};
 
   myLine1 = {x0: X0, y0: Y0, x: myCircle1.x, y: myCircle1.y};
   myLine2 = {x0: myCircle1.x, y0: myCircle1.y, x: myCircle2.x, y: myCircle2.y};
